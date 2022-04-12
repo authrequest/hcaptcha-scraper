@@ -1,11 +1,16 @@
 import imghash from "imghash";
 import puppeteer from "puppeteer-extra";
 import Stealth from "puppeteer-extra-plugin-stealth";
+import proxyChain from "proxy-chain";
 import { createCursor } from "ghost-cursor";
 import { writeFile, writeFileSync } from "fs";
 import got from "got";
 import path from "path";
 import EventEmitter from "events";
+
+global.proxies = [
+  "ip:7000:password:username",
+];
 
 const findCaptcha = async (page) => {
   await page.waitForSelector(".h-captcha");
@@ -60,33 +65,53 @@ const savePrompt = async (prompt, hash) => {
   });
 };
 
+const parseProxies = () => {
+  const proxyArray = [];
+  global.proxies.forEach((p) => {
+    const [host, port, password, username] = p.split(":");
+    proxyArray.push({
+      host,
+      port,
+      username,
+      password,
+    });
+  });
+  return proxyArray;
+}
+
 const main = async () => {
-  puppeteer.use(Stealth());
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  const doneEmitter = new EventEmitter();
-  doneEmitter.on("downloadedImage", async (e) => {
-    if (e == 18) {
-      await browser.close();
-    }
-  });
-  page.on("response", async (e) => {
-    if (e.url().includes("getcaptcha")) {
-      const body = await e.json();
-      const prompt = body.requester_question.en;
-      let imageCount = 0;
-      body.tasklist.forEach(async (t) => {
-        const buffer = await downloadRawImage(t.datapoint_uri);
-        const hash = await imghash.hash(buffer);
-        saveImage(buffer, hash);
-        savePrompt(prompt, hash);
-        imageCount++;
-        doneEmitter.emit("downloadedImage", imageCount);
-      });
-    }
-  });
-  await page.goto("https://hcaptcha.com");
-  await findCaptcha(page);
-  await openCaptcha(page);
+  let proxies = parseProxies();
+  for (let proxy of proxies) {
+    console.log(`Using proxy: ${proxy.host}:${proxy.port}:${proxy.username}:${proxy.password}`);
+    puppeteer.use(Stealth());
+    const browser = await puppeteer.launch({ args: [`--proxy=http://${proxy.host}:${proxy.port}`] });
+    const page = await browser.newPage();
+    // Authenticate Proxy
+    await page.authenticate({ username: proxy.username, password: proxy.password });
+    const doneEmitter = new EventEmitter();
+    doneEmitter.on("downloadedImage", async (e) => {
+      if (e == 18) {
+        await browser.close();
+      }
+    });
+    page.on("response", async (e) => {
+      if (e.url().includes("getcaptcha")) {
+        const body = await e.json();
+        const prompt = body.requester_question.en;
+        let imageCount = 0;
+        body.tasklist.forEach(async (t) => {
+          const buffer = await downloadRawImage(t.datapoint_uri);
+          const hash = await imghash.hash(buffer);
+          saveImage(buffer, hash);
+          savePrompt(prompt, hash);
+          imageCount++;
+          doneEmitter.emit("downloadedImage", imageCount);
+        });
+      }
+    });
+    await page.goto("https://hcaptcha.com");
+    await findCaptcha(page);
+    await openCaptcha(page);
+  }
 };
 main();

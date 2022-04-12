@@ -4,6 +4,7 @@ specifiers:
   ghost-cursor: ^1.1.5
   got: ^11.8.2
   imghash: ^0.0.9
+  proxy-chain: ^1.0.4
   puppeteer: ^10.0.0
   puppeteer-extra: ^3.1.18
   puppeteer-extra-plugin-stealth: ^2.7.8
@@ -12,6 +13,7 @@ dependencies:
   ghost-cursor: 1.1.5
   got: 11.8.2
   imghash: 0.0.9
+  proxy-chain: 1.0.4
   puppeteer: 10.0.0
   puppeteer-extra: 3.1.18_puppeteer@10.0.0
   puppeteer-extra-plugin-stealth: 2.7.8_puppeteer-extra@3.1.18
@@ -653,6 +655,13 @@ packages:
     engines: {node: '>=0.4.0'}
     dev: false
 
+  /proxy-chain/1.0.4:
+    resolution: {integrity: sha512-KlEOQoN4Y7dEZqikmhbtSnh1c/MjF9t8UWx4yh/2Bdkb5CnQcepM0iHU7O1MkgDTUdD1a+YwDFDJRB/xCrOyCA==}
+    engines: {node: '>=10'}
+    dependencies:
+      underscore: 1.13.2
+    dev: false
+
   /proxy-from-env/1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
     dev: false
@@ -845,6 +854,10 @@ packages:
     dependencies:
       buffer: 5.7.1
       through: 2.3.8
+    dev: false
+
+  /underscore/1.13.2:
+    resolution: {integrity: sha512-ekY1NhRzq0B08g4bGuX4wd2jZx5GnKz6mKSqFL4nqBlfyMGiG10gDFhDTMEfYmDL6Jy0FUIZp7wiRB+0BP7J2g==}
     dev: false
 
   /universalify/2.0.0:
